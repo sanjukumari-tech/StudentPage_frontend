@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/authSlice';
-
+import { Link } from 'react-router-dom';
 const Signup = () => {
   const dispatch = useDispatch();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -10,11 +10,34 @@ const Signup = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = (e) => {
-    e.preventDefault();
-    dispatch(login({ name: form.name, email: form.email }));
-    alert("Signed up successfully!");
-  };
+ const handleSignup = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch("https://studentpage-backend.onrender.com/api/user/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+
+    console.log(res)
+    const data = await res.json();
+
+    if (res.ok) {
+      // Optionally dispatch login (if you want to set auth state in Redux)
+      dispatch(login({ name: data.name, email: data.email, token: data.token }));
+      alert("Signed up successfully!");
+    } else {
+      alert(`Signup failed: ${data.message || "Unknown error"}`);
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+    alert("Signup failed. Please try again later.");
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-200 p-4">
@@ -57,6 +80,14 @@ const Signup = () => {
         >
           Signup
         </button>
+
+         {/* <div className="space-x-4"> */}
+          <Link to="/login">
+            {/* <button className="px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition duration-300 transform hover:scale-105"> */}
+              Login
+            {/* </button> */}
+          </Link>
+          {/* </div> */}
       </form>
     </div>
   );

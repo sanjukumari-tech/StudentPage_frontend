@@ -12,12 +12,34 @@ const Login = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    dispatch(login({ email: form.email }));
-    alert("Logged in successfully!");
-    navigate('/');
-  };
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch("https://studentpage-backend.onrender.com/api/user/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // Optionally store token in localStorage
+      localStorage.setItem("userToken", data.token);
+      dispatch(login({ email: data.email, name: data.name, token: data.token }));
+      alert("Logged in successfully!");
+      navigate('/');
+    } else {
+      alert(`Login failed: ${data.message || "Invalid credentials"}`);
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Something went wrong. Please try again later.");
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-indigo-100 to-pink-200 p-4">
