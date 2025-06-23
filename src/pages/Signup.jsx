@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/authSlice';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 const Signup = () => {
   const dispatch = useDispatch();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ fullname: '', email: '', password: '' });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -13,7 +15,7 @@ const Signup = () => {
  const handleSignup = async (e) => {
   e.preventDefault();
   try {
-    const res = await fetch("https://studentpage-backend.onrender.com/api/user/signup", {
+    const res = await fetch("http://localhost:4002/api/user/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,6 +31,7 @@ const Signup = () => {
       // Optionally dispatch login (if you want to set auth state in Redux)
       dispatch(login({ name: data.name, email: data.email, token: data.token }));
       alert("Signed up successfully!");
+      navigate("/login")
     } else {
       alert(`Signup failed: ${data.message || "Unknown error"}`);
     }
@@ -49,7 +52,7 @@ const Signup = () => {
 
         <input
           type="text"
-          name="name"
+          name="fullname"
           placeholder="Name"
           onChange={handleChange}
           required

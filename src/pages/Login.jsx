@@ -15,7 +15,7 @@ const Login = () => {
  const handleLogin = async (e) => {
   e.preventDefault();
   try {
-    const res = await fetch("https://studentpage-backend.onrender.com/api/user/login", {
+    const res = await fetch("http://localhost:4002/api/user/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,7 +30,7 @@ const Login = () => {
       localStorage.setItem("userToken", data.token);
       dispatch(login({ email: data.email, name: data.name, token: data.token }));
       alert("Logged in successfully!");
-      navigate('/');
+      navigate('/assignment');
     } else {
       alert(`Login failed: ${data.message || "Invalid credentials"}`);
     }

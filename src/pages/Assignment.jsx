@@ -1,120 +1,196 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // required for navigation
 
 const Assignment = () => {
-  const [link, setLink] = useState('');
-  const [file, setFile] = useState(null);
-  const [answer, setAnswer] = useState('');
-  const [submissionType, setSubmissionType] = useState('none');
+  const navigate = useNavigate();
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    studentName: "",
+    studentId: "",
+    link: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:4002/api/user/logout", {
+        method: "POST",
+        credentials: "include", // include cookies if using sessions
+      });
+      navigate("/")
+    
+
+      if (res.ok) {
+        alert("Logged out successfully.");
+        // Redirect to homepage
+        window.location.href = "/";
+      } else {
+        const errorData = await res.json();
+        alert("Logout failed: " + (errorData?.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      navigate("/")
+      alert("An error occurred during logout.");
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (submissionType === 'file' && !file) {
-      alert("Please upload a file.");
+    if (
+      !form.title ||
+      !form.description ||
+      !form.studentName ||
+      !form.studentId ||
+      !form.link.trim()
+    ) {
+      alert("Please fill all required fields including link.");
       return;
     }
 
-    if (submissionType === 'link' && !link.trim()) {
-      alert("Please enter a valid link.");
-      return;
+    try {
+      const res = await fetch("http://localhost:4002/api/upload/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          attachment: form.link,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("Assignment submitted successfully!");
+        setForm({
+          title: "",
+          description: "",
+          studentName: "",
+          studentId: "",
+          link: "",
+        });
+      } else {
+        alert("Submission failed: " + (result?.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Submission error occurred.");
     }
-
-    if (!answer.trim()) {
-      alert("Please provide a written answer.");
-      return;
-    }
-
-    console.log("Assignment Submitted:");
-    console.log("Answer:", answer);
-    console.log("Link:", link);
-    console.log("File:", file?.name);
-
-    alert("Assignment submitted successfully!");
-    setLink('');
-    setFile(null);
-    setAnswer('');
-    setSubmissionType('none');
-    e.target.reset();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center px-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center px-4">
+    
+      <button
+        onClick={handleLogout}
+        className="absolute top-5 right-5 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+      >
+        Logout
+      </button>
+
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-5xl bg-white shadow-md rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-8"
       >
-        {/* Left Section: Question */}
+        {/* Left Section */}
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Assignment Question</h2>
-          <p className="text-gray-700 mb-6">
-            <strong>Q:</strong> Explain the concept of closures in JavaScript with an example.
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Assignment Question
+          </h2>
+          <p className="text-gray-700 mb-4">
+            <strong>Q:</strong> Explain the concept of closures in JavaScript
+            with an example.
           </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block font-medium text-gray-700">Title</label>
+              <input
+                type="text"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                className="w-full border p-2 rounded-md"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium text-gray-700">
+                Student Name
+              </label>
+              <input
+                type="text"
+                name="studentName"
+                value={form.studentName}
+                onChange={handleChange}
+                className="w-full border p-2 rounded-md"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium text-gray-700">
+                Student ID
+              </label>
+              <input
+                type="text"
+                name="studentId"
+                value={form.studentId}
+                onChange={handleChange}
+                className="w-full border p-2 rounded-md"
+                required
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Right Section: Answer Submission */}
+        {/* Right Section */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800 text-center">Submit Your Answer</h2>
+          <h2 className="text-xl font-semibold text-gray-800 text-center">
+            Submit Your Answer
+          </h2>
 
-          {/* Text Answer */}
           <div>
-            <label className="block mb-1 font-medium text-gray-700">Write your answer</label>
+            <label className="block font-medium text-gray-700">
+              Write your answer
+            </label>
             <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Your answer here..."
+              name="description"
+              value={form.description}
+              onChange={handleChange}
               rows={4}
-              className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-            ></textarea>
+              className="w-full border p-2 rounded-md"
+              required
+            />
           </div>
 
-          {/* Select Submission Type */}
           <div>
-            <label className="block mb-1 font-medium text-gray-700">Select Submission Type</label>
-            <select
-              value={submissionType}
-              onChange={(e) => setSubmissionType(e.target.value)}
-              className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              <option value="none">-- Select --</option>
-              <option value="file">Upload File</option>
-              <option value="link">Submit Link</option>
-            </select>
+            <label className="block font-medium text-gray-700">
+              Link to your submission
+            </label>
+            <input
+              type="url"
+              name="link"
+              placeholder="https://drive.google.com/..."
+              value={form.link}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-md"
+              required
+            />
           </div>
 
-          {/* Conditional Input */}
-          {submissionType === 'file' && (
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">Upload File</label>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.ppt,.zip"
-                onChange={handleFileChange}
-                className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-          )}
-
-          {submissionType === 'link' && (
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">Submit Link</label>
-              <input
-                type="url"
-                placeholder="https://drive.google.com/..."
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                className="w-full border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-            </div>
-          )}
-
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300"
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
           >
             Submit Assignment
           </button>
