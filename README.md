@@ -1,4 +1,5 @@
 # React + Vite
+[landing page](./src/assets/Screenshot%202025-06-23%20141550.png)
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
